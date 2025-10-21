@@ -1,6 +1,7 @@
 """Continuous trajectory tracking"""
 import cv2
 import numpy as np
+import sys
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from .charuco_detector import CharucoDetector
@@ -174,10 +175,23 @@ def run_trajectory_tracking(config: Dict[str, Any], calibration_params: Dict[str
                 if tracker.is_tracking:
                     pose_success, pose = tracker.add_pose(frame)
                     if pose_success:
-                        # Display current pose
+                        # Display current pose on video
                         text = f"X:{pose['translation']['x']:.1f} Y:{pose['translation']['y']:.1f} Yaw:{pose['rotation']['yaw']:.1f}"
                         cv2.putText(display_frame, text, (10, 60),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+                        # Output to CLI (same line, updated in real-time)
+                        cli_output = (
+                            f"\rPoses: {len(tracker.trajectory):4d} | "
+                            f"X: {pose['translation']['x']:8.3f}mm | "
+                            f"Y: {pose['translation']['y']:8.3f}mm | "
+                            f"Z: {pose['translation']['z']:8.3f}mm | "
+                            f"Yaw: {pose['rotation']['yaw']:7.2f}° | "
+                            f"Quality: {pose['quality']:.2f} | "
+                            f"FPS: {processing_fps:.1f}"
+                        )
+                        sys.stdout.write(cli_output)
+                        sys.stdout.flush()
 
             # Display tracking status
             status_text = "TRACKING" if tracker.is_tracking else "STOPPED"
@@ -202,7 +216,7 @@ def run_trajectory_tracking(config: Dict[str, Any], calibration_params: Dict[str
             key = cv2.waitKey(1) & 0xFF
 
             if key == ord('q'):
-                print("トラッキングを中止しました")
+                print("\nトラッキングを中止しました")
                 break
             elif key == ord('s'):
                 if not tracker.is_tracking:
@@ -211,12 +225,13 @@ def run_trajectory_tracking(config: Dict[str, Any], calibration_params: Dict[str
                 if tracker.is_tracking:
                     tracker.stop_tracking()
                     if len(tracker.trajectory) > 0:
+                        print()  # New line after real-time output
                         tracker.save_trajectory(output_file)
                         camera.stop()
                         cv2.destroyAllWindows()
                         return output_file
                     else:
-                        print("軌跡データがありません")
+                        print("\n軌跡データがありません")
 
     finally:
         camera.stop()

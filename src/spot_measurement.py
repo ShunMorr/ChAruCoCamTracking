@@ -1,6 +1,7 @@
 """Spot measurement of camera position"""
 import cv2
 import numpy as np
+import sys
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from .charuco_detector import CharucoDetector
@@ -173,7 +174,7 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
                 samples_tvecs = []
                 samples_qualities = []
 
-                print(f"測定中... ({num_samples}サンプル)")
+                print(f"\n測定中... ({num_samples}サンプル)")
 
                 for i in range(num_samples):
                     # Get latest frame from camera thread
@@ -188,6 +189,15 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
                         samples_tvecs.append(tvec)
                         quality = measurement.detector.get_pose_quality_score(corners, ids)
                         samples_qualities.append(quality)
+
+                        # CLI progress output (same line)
+                        progress = (len(samples_rvecs) / num_samples) * 100
+                        cli_output = (
+                            f"\rサンプル収集中: {len(samples_rvecs):3d}/{num_samples} "
+                            f"({progress:5.1f}%) | Quality: {quality:.2f}"
+                        )
+                        sys.stdout.write(cli_output)
+                        sys.stdout.flush()
 
                         # Visual feedback
                         display_frame = frame.copy()
@@ -214,9 +224,10 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
                         'z_mm': float(std_tvec[2, 0] * 1000),
                     }
 
-                    print(f"測定完了: {len(samples_rvecs)}/{num_samples} サンプル使用")
-                    print(f"位置: X={pose['translation']['x']:.3f}mm, Y={pose['translation']['y']:.3f}mm")
-                    print(f"標準偏差: X={pose['std_dev']['x_mm']:.4f}mm, Y={pose['std_dev']['y_mm']:.4f}mm")
+                    print(f"\n測定完了: {len(samples_rvecs)}/{num_samples} サンプル使用")
+                    print(f"位置: X={pose['translation']['x']:.3f}mm, Y={pose['translation']['y']:.3f}mm, Z={pose['translation']['z']:.3f}mm")
+                    print(f"回転: Yaw={pose['rotation']['yaw']:.3f}°")
+                    print(f"標準偏差: X={pose['std_dev']['x_mm']:.4f}mm, Y={pose['std_dev']['y_mm']:.4f}mm, Z={pose['std_dev']['z_mm']:.4f}mm")
 
                     # Save measurement
                     measurement.save_measurement(pose, output_file)
@@ -226,7 +237,7 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
                     cv2.waitKey(1000)
                     break
                 else:
-                    print("測定に失敗しました（ボードが検出できません）")
+                    print("\n測定に失敗しました（ボードが検出できません）")
 
     finally:
         camera.stop()
