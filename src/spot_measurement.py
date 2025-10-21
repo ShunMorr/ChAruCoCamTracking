@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 import sys
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 from .charuco_detector import CharucoDetector
 from .utils import save_yaml, format_pose
@@ -116,6 +116,9 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
     """
     measurement = SpotMeasurement(config, calibration_params)
 
+    # Display (headless) setting
+    display_enabled = config.get('display', {}).get('enabled', True)
+
     # Initialize threaded camera
     camera = ThreadedCamera(
         device_id=config['camera']['device_id'],
@@ -160,9 +163,14 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
             cv2.putText(display_frame, "Press SPACE to measure",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
 
-            cv2.imshow('Spot Measurement', display_frame)
+            if display_enabled:
+                cv2.imshow('Spot Measurement', display_frame)
+                # Window close (X) -> stop session
+                if cv2.getWindowProperty('Spot Measurement', cv2.WND_PROP_VISIBLE) < 1:
+                    print("ウィンドウが閉じられたためセッションを終了します")
+                    break
 
-            key = cv2.waitKey(1) & 0xFF
+            key = (cv2.waitKey(1) & 0xFF) if display_enabled else -1
 
             if key == ord('q'):
                 if not measured:
@@ -204,8 +212,9 @@ def run_spot_measurement(config: Dict[str, Any], calibration_params: Dict[str, A
                         display_frame = measurement.detector.draw_detection(display_frame, corners, ids, rvec, tvec)
                         cv2.putText(display_frame, f"Sampling: {len(samples_rvecs)}/{num_samples}",
                                     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-                        cv2.imshow('Spot Measurement', display_frame)
-                        cv2.waitKey(1)
+                        if display_enabled:
+                            cv2.imshow('Spot Measurement', display_frame)
+                            cv2.waitKey(1)
 
                 if len(samples_rvecs) > 0:
                     # Average measurements

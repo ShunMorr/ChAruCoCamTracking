@@ -174,6 +174,9 @@ def run_calibration_interactive(config: Dict[str, Any]) -> Optional[str]:
     """
     calibrator = CameraCalibrator(config)
 
+    # Display (headless) setting
+    display_enabled = config.get('display', {}).get('enabled', True)
+
     # Initialize threaded camera
     camera = ThreadedCamera(
         device_id=config['camera']['device_id'],
@@ -214,9 +217,14 @@ def run_calibration_interactive(config: Dict[str, Any]) -> Optional[str]:
             cv2.putText(display_frame, f"Frames: {collected_frames}/{config['calibration']['min_frames']}",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-            cv2.imshow('Calibration', display_frame)
+            if display_enabled:
+                cv2.imshow('Calibration', display_frame)
+                # Window close (X) -> stop session
+                if cv2.getWindowProperty('Calibration', cv2.WND_PROP_VISIBLE) < 1:
+                    print("ウィンドウが閉じられたためキャリブレーションを終了します")
+                    break
 
-            key = cv2.waitKey(1) & 0xFF
+            key = (cv2.waitKey(1) & 0xFF) if display_enabled else -1
 
             if key == ord('q'):
                 print("キャリブレーションを中止しました")

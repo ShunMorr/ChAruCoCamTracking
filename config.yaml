@@ -8,10 +8,10 @@ charuco:
   squares_y: 6
 
   # 1マスのサイズ (メートル単位)
-  square_length: 0.04  # 40mm
+  square_length: 0.03  
 
   # ArUcoマーカーのサイズ (メートル単位)
-  marker_length: 0.03  # 30mm
+  marker_length: 0.022 
 
 # カメラ設定
 camera:
@@ -40,3 +40,7 @@ tracking:
 
   # スポット測定結果の保存先デフォルト
   spot_save_path: "spot_measurement.yaml"
+
+# display settings
+display:
+  enabled: true

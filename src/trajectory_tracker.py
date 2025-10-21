@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 import sys
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from .charuco_detector import CharucoDetector
 from .utils import save_yaml, format_pose, calculate_displacement
@@ -136,6 +136,9 @@ def run_trajectory_tracking(config: Dict[str, Any], calibration_params: Dict[str
     """
     tracker = TrajectoryTracker(config, calibration_params)
 
+    # Display (headless) setting
+    display_enabled = config.get('display', {}).get('enabled', True)
+
     # Initialize threaded camera
     camera = ThreadedCamera(
         device_id=config['camera']['device_id'],
@@ -211,9 +214,14 @@ def run_trajectory_tracking(config: Dict[str, Any], calibration_params: Dict[str
             cv2.putText(display_frame, fps_text, (10, display_frame.shape[0] - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-            cv2.imshow('Trajectory Tracking', display_frame)
+            if display_enabled:
+                cv2.imshow('Trajectory Tracking', display_frame)
+                # Window close (X) -> stop session
+                if cv2.getWindowProperty('Trajectory Tracking', cv2.WND_PROP_VISIBLE) < 1:
+                    print("\nウィンドウが閉じられたためセッションを終了します")
+                    break
 
-            key = cv2.waitKey(1) & 0xFF
+            key = (cv2.waitKey(1) & 0xFF) if display_enabled else -1
 
             if key == ord('q'):
                 print("\nトラッキングを中止しました")
