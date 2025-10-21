@@ -1,0 +1,42 @@
+# ChArUco Board Configuration
+charuco:
+  # ArUcoマーカー辞書タイプ (DICT_4X4_50, DICT_5X5_100, etc.)
+  dictionary: "DICT_5X5_100"
+
+  # チェスボードのマス数 (幅x高さ)
+  squares_x: 8
+  squares_y: 6
+
+  # 1マスのサイズ (メートル単位)
+  square_length: 0.04  # 40mm
+
+  # ArUcoマーカーのサイズ (メートル単位)
+  marker_length: 0.03  # 30mm
+
+# カメラ設定
+camera:
+  # カメラデバイスID
+  device_id: 0
+
+  # 解像度
+  width: 1920
+  height: 1080
+
+  # FPS
+  fps: 30
+
+# キャリブレーション設定
+calibration:
+  # キャリブレーション結果の保存先
+  save_path: "calibration_params.yaml"
+
+  # キャリブレーションに必要な最小フレーム数
+  min_frames: 30
+
+# トラッキング設定
+tracking:
+  # 連続トラッキング結果の保存先デフォルト
+  default_save_path: "trajectory.yaml"
+
+  # スポット測定結果の保存先デフォルト
+  spot_save_path: "spot_measurement.yaml"
