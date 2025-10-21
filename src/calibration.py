@@ -4,6 +4,7 @@ import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
 from .utils import save_yaml, load_yaml
+from .camera import ThreadedCamera
 
 
 class CameraCalibrator:
@@ -173,13 +174,15 @@ def run_calibration_interactive(config: Dict[str, Any]) -> Optional[str]:
     """
     calibrator = CameraCalibrator(config)
 
-    # Open camera
-    cap = cv2.VideoCapture(config['camera']['device_id'])
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, config['camera']['width'])
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config['camera']['height'])
-    cap.set(cv2.CAP_PROP_FPS, config['camera']['fps'])
+    # Initialize threaded camera
+    camera = ThreadedCamera(
+        device_id=config['camera']['device_id'],
+        width=config['camera']['width'],
+        height=config['camera']['height'],
+        fps=config['camera']['fps']
+    )
 
-    if not cap.isOpened():
+    if not camera.start():
         print("カメラを開けませんでした")
         return None
 
@@ -190,47 +193,51 @@ def run_calibration_interactive(config: Dict[str, Any]) -> Optional[str]:
 
     collected_frames = 0
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("フレーム取得に失敗しました")
-            break
+    try:
+        while True:
+            # Get latest frame from camera thread
+            ret, frame = camera.read()
+            if not ret:
+                print("フレーム取得に失敗しました")
+                break
 
-        display_frame = frame.copy()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            display_frame = frame.copy()
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # Detect ChArUco board for visualization
-        charuco_corners, charuco_ids, marker_corners, marker_ids = calibrator.detector.detectBoard(gray)
+            # Detect ChArUco board for visualization
+            charuco_corners, charuco_ids, marker_corners, marker_ids = calibrator.detector.detectBoard(gray)
 
-        if charuco_corners is not None and len(charuco_corners) > 0:
-            cv2.aruco.drawDetectedCornersCharuco(display_frame, charuco_corners, charuco_ids)
+            if charuco_corners is not None and len(charuco_corners) > 0:
+                cv2.aruco.drawDetectedCornersCharuco(display_frame, charuco_corners, charuco_ids)
 
-        # Display info
-        cv2.putText(display_frame, f"Frames: {collected_frames}/{config['calibration']['min_frames']}",
-                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Display info
+            cv2.putText(display_frame, f"Frames: {collected_frames}/{config['calibration']['min_frames']}",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-        cv2.imshow('Calibration', display_frame)
+            cv2.imshow('Calibration', display_frame)
 
-        key = cv2.waitKey(1) & 0xFF
+            key = cv2.waitKey(1) & 0xFF
 
-        if key == ord('q'):
-            print("キャリブレーションを中止しました")
-            break
-        elif key == ord(' '):
-            if calibrator.collect_calibration_frame(frame):
-                collected_frames += 1
-                print(f"フレーム取得成功 ({collected_frames}/{config['calibration']['min_frames']})")
-            else:
-                print("ChArUcoボードが検出できませんでした")
-        elif key == ord('c'):
-            success, calib_params = calibrator.calibrate()
-            if success:
-                save_path = config['calibration']['save_path']
-                calibrator.save_calibration(calib_params, save_path)
-                cap.release()
-                cv2.destroyAllWindows()
-                return save_path
+            if key == ord('q'):
+                print("キャリブレーションを中止しました")
+                break
+            elif key == ord(' '):
+                if calibrator.collect_calibration_frame(frame):
+                    collected_frames += 1
+                    print(f"フレーム取得成功 ({collected_frames}/{config['calibration']['min_frames']})")
+                else:
+                    print("ChArUcoボードが検出できませんでした")
+            elif key == ord('c'):
+                success, calib_params = calibrator.calibrate()
+                if success:
+                    save_path = config['calibration']['save_path']
+                    calibrator.save_calibration(calib_params, save_path)
+                    camera.stop()
+                    cv2.destroyAllWindows()
+                    return save_path
 
-    cap.release()
-    cv2.destroyAllWindows()
+    finally:
+        camera.stop()
+        cv2.destroyAllWindows()
+
     return None

@@ -5,6 +5,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 from .charuco_detector import CharucoDetector
 from .utils import save_yaml, format_pose, calculate_displacement
+from .camera import ThreadedCamera, FPSCounter
 
 
 class TrajectoryTracker:
@@ -134,75 +135,91 @@ def run_trajectory_tracking(config: Dict[str, Any], calibration_params: Dict[str
     """
     tracker = TrajectoryTracker(config, calibration_params)
 
-    # Open camera
-    cap = cv2.VideoCapture(config['camera']['device_id'])
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, config['camera']['width'])
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config['camera']['height'])
-    cap.set(cv2.CAP_PROP_FPS, config['camera']['fps'])
+    # Initialize threaded camera
+    camera = ThreadedCamera(
+        device_id=config['camera']['device_id'],
+        width=config['camera']['width'],
+        height=config['camera']['height'],
+        fps=config['camera']['fps']
+    )
 
-    if not cap.isOpened():
+    if not camera.start():
         print("カメラを開けませんでした")
         return None
+
+    # FPS counter for processing performance
+    fps_counter = FPSCounter()
 
     print("=== 連続トラッキング ===")
     print("[S]: トラッキング開始, [E]: トラッキング終了・保存, [Q]: 終了")
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("フレーム取得に失敗しました")
-            break
+    try:
+        while True:
+            # Get latest frame from camera thread
+            ret, frame = camera.read()
+            if not ret:
+                print("フレーム取得に失敗しました")
+                break
 
-        # Try to detect and estimate pose
-        success, rvec, tvec, corners, ids = tracker.detector.detect_and_estimate_pose(frame)
+            # Try to detect and estimate pose
+            success, rvec, tvec, corners, ids = tracker.detector.detect_and_estimate_pose(frame)
 
-        display_frame = frame.copy()
+            display_frame = frame.copy()
 
-        if success:
-            # Draw detection
-            display_frame = tracker.detector.draw_detection(display_frame, corners, ids, rvec, tvec)
+            if success:
+                # Draw detection
+                display_frame = tracker.detector.draw_detection(display_frame, corners, ids, rvec, tvec)
 
-            # Add pose to trajectory if tracking
+                # Add pose to trajectory if tracking
+                if tracker.is_tracking:
+                    pose_success, pose = tracker.add_pose(frame)
+                    if pose_success:
+                        # Display current pose
+                        text = f"X:{pose['translation']['x']:.1f} Y:{pose['translation']['y']:.1f} Yaw:{pose['rotation']['yaw']:.1f}"
+                        cv2.putText(display_frame, text, (10, 60),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+            # Display tracking status
+            status_text = "TRACKING" if tracker.is_tracking else "STOPPED"
+            status_color = (0, 255, 0) if tracker.is_tracking else (0, 0, 255)
+            cv2.putText(display_frame, status_text, (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, status_color, 2)
+
+            # Display number of poses
             if tracker.is_tracking:
-                pose_success, pose = tracker.add_pose(frame)
-                if pose_success:
-                    # Display current pose
-                    text = f"X:{pose['translation']['x']:.1f} Y:{pose['translation']['y']:.1f} Yaw:{pose['rotation']['yaw']:.1f}"
-                    cv2.putText(display_frame, text, (10, 60),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                cv2.putText(display_frame, f"Poses: {len(tracker.trajectory)}",
+                            (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
-        # Display tracking status
-        status_text = "TRACKING" if tracker.is_tracking else "STOPPED"
-        status_color = (0, 255, 0) if tracker.is_tracking else (0, 0, 255)
-        cv2.putText(display_frame, status_text, (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, status_color, 2)
+            # Update and display FPS
+            processing_fps = fps_counter.update()
+            capture_fps = camera.get_fps()
+            fps_text = f"Capture: {capture_fps:.1f} fps | Processing: {processing_fps:.1f} fps"
+            cv2.putText(display_frame, fps_text, (10, display_frame.shape[0] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-        # Display number of poses
-        if tracker.is_tracking:
-            cv2.putText(display_frame, f"Poses: {len(tracker.trajectory)}",
-                        (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            cv2.imshow('Trajectory Tracking', display_frame)
 
-        cv2.imshow('Trajectory Tracking', display_frame)
+            key = cv2.waitKey(1) & 0xFF
 
-        key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                print("トラッキングを中止しました")
+                break
+            elif key == ord('s'):
+                if not tracker.is_tracking:
+                    tracker.start_tracking()
+            elif key == ord('e'):
+                if tracker.is_tracking:
+                    tracker.stop_tracking()
+                    if len(tracker.trajectory) > 0:
+                        tracker.save_trajectory(output_file)
+                        camera.stop()
+                        cv2.destroyAllWindows()
+                        return output_file
+                    else:
+                        print("軌跡データがありません")
 
-        if key == ord('q'):
-            print("トラッキングを中止しました")
-            break
-        elif key == ord('s'):
-            if not tracker.is_tracking:
-                tracker.start_tracking()
-        elif key == ord('e'):
-            if tracker.is_tracking:
-                tracker.stop_tracking()
-                if len(tracker.trajectory) > 0:
-                    tracker.save_trajectory(output_file)
-                    cap.release()
-                    cv2.destroyAllWindows()
-                    return output_file
-                else:
-                    print("軌跡データがありません")
+    finally:
+        camera.stop()
+        cv2.destroyAllWindows()
 
-    cap.release()
-    cv2.destroyAllWindows()
     return None
