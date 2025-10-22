@@ -7,7 +7,7 @@ AMR（自律移動ロボット）の中心軸直下カメラを用いた高精�
 ChArUcoボード上をカメラで移動した際の軌跡を高精度（目標誤差0.1mm以下）でトラッキングするシステムです。AMRの移動量・回転量の精密な計測に使用します。
 
 ![gif](./doc/test.gif)
-- [グラフ](https://htmlpreview.github.io/?https://github.com/ShunMorr/ChAruCoCamTracking/tree/main/doc/track_test.html)
+- [グラフ](https://htmlpreview.github.io/?https://github.com/ShunMorr/ChAruCoCamTracking/blob/main/doc/track_test.html)
 
 ## 特徴
 
