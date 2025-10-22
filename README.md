@@ -1,10 +1,8 @@
 # ChArUco Camera Tracking System
 
-AMR（自律移動ロボット）の中心軸直下カメラを用いた高精度位置トラッキングシステム
-
 ## 概要
 
-ChArUcoボード上をカメラで移動した際の軌跡を高精度（目標誤差0.1mm以下）でトラッキングするシステムです。AMRの移動量・回転量の精密な計測に使用します。
+ChArUcoボード上をカメラで移動した際の軌跡を高精度（目標誤差0.1mm以下）でトラッキングするシステムです。カメラの移動量・回転量の精密な計測に使用します。
 
 ![gif](./doc/test.gif)
 - [グラフ](https://htmlpreview.github.io/?https://github.com/ShunMorr/ChAruCoCamTracking/blob/main/doc/track_test.html)
@@ -72,7 +70,7 @@ python cli.py calibrate
 
 ### 3. 連続軌跡トラッキング
 
-AMRを連続的に移動させながら、カメラ位置の軌跡を記録します：
+カメラを連続的に移動させながら、カメラ位置の軌跡を記録します：
 
 ```bash
 python cli.py track -o trajectory_test1.yaml
@@ -102,7 +100,7 @@ Poses:  123 | X:  234.567mm | Y:  123.456mm | Z:  450.123mm | Yaw:   45.67° | Q
 # 移動前の位置測定
 python cli.py spot -o spot_before.yaml -s 50
 
-# AMRを移動...
+# カメラを移動...
 
 # 移動後の位置測定
 python cli.py spot -o spot_after.yaml -s 50
