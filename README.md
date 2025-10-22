@@ -157,6 +157,19 @@ python cli.py compare trajectory \
 - 2D/3D移動距離
 - 測定不確かさ（スポット測定の場合）
 
+### 6. 軌跡データの可視化
+
+yamlファイルを読み込んで軌跡データをプロットします
+
+```bash
+python view.py file1_trajectory_test1.yaml --interval 5 --arrow_length 20 -o file1_trajectory_test1.html
+``` 
+
+オプション
+- `-o, --output`: 出力ファイル
+- `--interval N`: N点ごとに姿勢の矢印を表示(Default=10)
+- `--arrow-length L`: 矢印の長さ
+
 ## 設定ファイル
 
 `config.yaml` でシステムパラメータを設定できます：
