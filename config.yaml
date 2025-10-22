@@ -4,8 +4,8 @@ charuco:
   dictionary: "DICT_5X5_100"
 
   # チェスボードのマス数 (幅x高さ)
-  squares_x: 8
-  squares_y: 6
+  squares_x: 7
+  squares_y: 7
 
   # 1マスのサイズ (メートル単位)
   square_length: 0.03  
@@ -19,8 +19,8 @@ camera:
   device_id: 0
 
   # 解像度
-  width: 1920
-  height: 1080
+  width: 1280
+  height: 720
 
   # FPS
   fps: 30
@@ -35,6 +35,11 @@ calibration:
 
 # トラッキング設定
 tracking:
+  # トラッキング処理のFPS（データ記録頻度）
+  # カメラのFPSとは独立して、何fpsでポーズをトラッキングするかを指定
+  # 例: 30 = 毎フレーム記録, 10 = 0.1秒ごとに記録, 1 = 1秒ごとに記録
+  tracking_fps: 10
+
   # 連続トラッキング結果の保存先デフォルト
   default_save_path: "trajectory.yaml"
 

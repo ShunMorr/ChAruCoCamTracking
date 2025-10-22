@@ -54,12 +54,12 @@ class ThreadedCamera:
             True if successful
         """
         # Open camera
-        self.cap = cv2.VideoCapture(self.device_id)
+        self.cap = cv2.VideoCapture(self.device_id, cv2.CAP_V4L2)
 
         if not self.cap.isOpened():
             print(f"カメラ {self.device_id} を開けませんでした")
             return False
-
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         # Set camera properties
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
