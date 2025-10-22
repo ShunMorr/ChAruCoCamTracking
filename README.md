@@ -16,8 +16,8 @@ ChArUcoボード上をカメラで移動した際の軌跡を高精度（目標�
 - **位置比較**: 測定結果の比較による移動量計算
 - **YAML出力**: 測定結果をYAML形式で保存
 - **スレッド化カメラ**: 別スレッドでの画像取得により常に最新フレームを処理
-- **リアルタイムFPS表示**: キャプチャFPSと処理FPSを分けて表示
-- **リアルタイムCLI出力**: 位置情報を同じ行に更新表示（フラッシュ出力）
+- **リアルタイムFPS表示**: キャプチャFPSとトラッキングFPSを表示
+- **可変トラッキング周波数**: データ記録頻度を設定可能（CPU負荷削減）
 
 ## システム要件
 
@@ -165,20 +165,28 @@ python cli.py compare trajectory \
 ```yaml
 charuco:
   dictionary: "DICT_5X5_100"  # ArUco辞書タイプ
-  squares_x: 8                # チェスボード幅（マス数）
-  squares_y: 6                # チェスボード高さ（マス数）
-  square_length: 0.04         # 1マスのサイズ (m)
-  marker_length: 0.03         # マーカーサイズ (m)
+  squares_x: 7                # チェスボード幅（マス数）
+  squares_y: 7                # チェスボード高さ（マス数）
+  square_length: 0.03         # 1マスのサイズ (m)
+  marker_length: 0.022        # マーカーサイズ (m)
 
 camera:
   device_id: 0                # カメラデバイスID
-  width: 1920                 # 解像度（幅）
-  height: 1080                # 解像度（高さ）
+  width: 1280                 # 解像度（幅）
+  height: 720                 # 解像度（高さ）
   fps: 30                     # フレームレート
 
 calibration:
   save_path: "calibration_params.yaml"
   min_frames: 30              # 最小キャリブレーションフレーム数
+
+tracking:
+  tracking_fps: 10            # トラッキング処理のFPS（データ記録頻度）
+  default_save_path: "trajectory.yaml"
+  spot_save_path: "spot_measurement.yaml"
+
+display:
+  enabled: true               # GUI表示の有効/無効
 ```
 
 ## 出力データ形式
@@ -266,24 +274,31 @@ displacement:
 実際の更新周波数は以下の要因に依存します：
 
 1. **カメラFPS**: config.yamlで設定（デフォルト30fps）
-2. **処理性能**:
+2. **トラッキングFPS**: config.yamlで設定（デフォルト10fps）
+   - データ記録とポーズ推定の実行頻度
+   - 1, 5, 10, 30など、用途に応じて調整可能
+3. **処理性能**:
    - ChArUco検出: 約10-30ms（解像度とコーナー数に依存）
    - ポーズ推定: 約1-5ms
-   - 合計処理時間: 約15-40ms → **理論上25-65fps**
+   - tracking_fps=10の場合、CPU負荷は大幅に削減
 
-3. **実測値の例**:
-   - 1920x1080解像度、Intel i7プロセッサ
+4. **実測値の例**:
+   - 1280x720解像度、Intel i7プロセッサ
    - キャプチャFPS: 30fps
-   - 処理FPS: 20-25fps（ChArUco検出成功時）
+   - トラッキングFPS: 9.8/10fps（ボード検出成功時）
 
 ### FPS表示
 
 トラッキング時に画面下部に2つのFPS値が表示されます：
 
 - **Capture FPS**: カメラからのフレーム取得速度
-- **Processing FPS**: ChArUco検出・ポーズ推定の処理速度
+- **Tracking FPS**: 実際のデータ記録速度/目標速度（例: 9.8/10 fps）
 
-処理FPSがキャプチャFPSより低い場合でも、常に最新フレームを処理するため、レイテンシーは最小限に抑えられます。
+**tracking_fpsの設定:**
+- `config.yaml`の`tracking.tracking_fps`でデータ記録頻度を設定可能
+- tracking_fps=10の場合、0.1秒ごとにポーズ推定とデータ記録を実行
+- スキップされたフレームでは計算を行わないため、CPU負荷を削減
+- GUIには最後に計算した座標が継続表示されます（点滅なし）
 
 ## 高精度化のためのヒント
 
