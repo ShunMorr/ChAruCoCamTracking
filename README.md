@@ -159,16 +159,63 @@ python cli.py compare trajectory \
 
 ### 6. 軌跡データの可視化
 
-yamlファイルを読み込んで軌跡データをプロットします
+#### 3D軌跡の可視化 (view.py)
+
+yamlファイルを読み込んで軌跡データを3Dプロットします
 
 ```bash
 python view.py file1_trajectory_test1.yaml --interval 5 --arrow_length 20 -o file1_trajectory_test1.html
-``` 
+```
 
 オプション
 - `-o, --output`: 出力ファイル
 - `--interval N`: N点ごとに姿勢の矢印を表示(Default=10)
 - `--arrow-length L`: 矢印の長さ
+
+#### 時系列グラフの可視化 (simple_view.py)
+
+軌跡データからx, y, yawの時間経過グラフを生成します
+
+```bash
+# 基本的な使用方法
+python simple_view.py trajectory_test1.yaml
+
+# HTMLファイルに保存
+python simple_view.py trajectory_test1.yaml -o output.html
+
+# qualityでフィルタリング（0.5以上）
+python simple_view.py trajectory_test1.yaml --min-quality 0.5
+
+# num_cornersでフィルタリング（6個以上）
+python simple_view.py trajectory_test1.yaml --min-corners 6
+
+# 両方のフィルタを適用
+python simple_view.py trajectory_test1.yaml --min-quality 0.5 --min-corners 6 -o filtered_output.html
+```
+
+**特徴:**
+- x, y, yawの3つの時系列グラフを表示
+- インタラクティブなプロット（ズーム、パン、ホバー表示）
+- qualityとnum_cornersによるデータフィルタリング
+- 統計情報の表示（最小値、最大値、範囲、フィルタリング数）
+
+**オプション:**
+- `-o, --output`: 出力HTMLファイル（指定しない場合はブラウザで表示）
+- `--min-quality`: 最小quality閾値（例: 0.5）
+- `--min-corners`: 最小コーナー数（例: 6）
+
+**出力統計情報:**
+```
+=== Summary Statistics ===
+Total poses in file: 1431
+Filtered out: 523 poses
+Displayed poses: 908 (63.5%)
+Duration: 161.64 seconds
+
+X: min=105.23, max=108.45, range=3.22 mm
+Y: min=-105.67, max=-50.58, range=55.09 mm
+Yaw: min=86.26, max=89.82, range=3.56 deg
+```
 
 ## 設定ファイル
 

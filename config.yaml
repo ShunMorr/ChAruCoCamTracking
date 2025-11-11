@@ -8,10 +8,10 @@ charuco:
   squares_y: 7
 
   # 1マスのサイズ (メートル単位)
-  square_length: 0.03  
+  square_length: 0.04
 
   # ArUcoマーカーのサイズ (メートル単位)
-  marker_length: 0.022 
+  marker_length: 0.03 
 
 # カメラ設定
 camera:
