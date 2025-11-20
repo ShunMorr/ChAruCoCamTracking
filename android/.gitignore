@@ -1,0 +1,14 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# OpenCV SDK (download separately)
+/app/libs/opencv*.aar
+/opencv-sdk/

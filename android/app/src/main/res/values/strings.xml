@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ChArUco Tracking</string>
+
+    <!-- Main Menu -->
+    <string name="calibrate_camera">カメラキャリブレーション</string>
+    <string name="start_tracking">連続トラッキング</string>
+    <string name="spot_measurement">スポット測定</string>
+    <string name="view_results">結果表示</string>
+
+    <!-- Calibration -->
+    <string name="calibration_title">カメラキャリブレーション</string>
+    <string name="calibration_instruction">ChArUcoボードを様々な角度・位置でカメラに映してください</string>
+    <string name="frames_collected">収集フレーム: %d / %d</string>
+    <string name="capture_frame">フレーム取得</string>
+    <string name="start_calibration">キャリブレーション実行</string>
+    <string name="calibration_success">キャリブレーション成功</string>
+    <string name="calibration_error">キャリブレーションに失敗しました</string>
+    <string name="reprojection_error">再投影誤差: %.3f px</string>
+
+    <!-- Tracking -->
+    <string name="tracking_title">連続トラッキング</string>
+    <string name="start_tracking_button">トラッキング開始</string>
+    <string name="stop_tracking_button">トラッキング終了</string>
+    <string name="poses_recorded">記録ポーズ数: %d</string>
+    <string name="position_x">X: %.2f mm</string>
+    <string name="position_y">Y: %.2f mm</string>
+    <string name="position_z">Z: %.2f mm</string>
+    <string name="rotation_yaw">Yaw: %.2f°</string>
+    <string name="quality">品質: %.2f</string>
+    <string name="fps">FPS: %.1f</string>
+    <string name="save_trajectory">軌跡を保存</string>
+    <string name="trajectory_saved">軌跡データを保存しました</string>
+
+    <!-- Spot Measurement -->
+    <string name="spot_title">スポット測定</string>
+    <string name="spot_instruction">カメラをChArUcoボード上に配置してください</string>
+    <string name="start_measurement">測定開始</string>
+    <string name="samples_collected">サンプル: %d / %d (%.1f%%)</string>
+    <string name="measurement_complete">測定完了</string>
+    <string name="save_measurement">測定結果を保存</string>
+    <string name="std_dev_x">標準偏差 X: %.4f mm</string>
+    <string name="std_dev_y">標準偏差 Y: %.4f mm</string>
+    <string name="std_dev_z">標準偏差 Z: %.4f mm</string>
+
+    <!-- Common -->
+    <string name="camera_permission_required">カメラ権限が必要です</string>
+    <string name="camera_permission_denied">カメラ権限が拒否されました</string>
+    <string name="board_not_detected">ボードが検出されていません</string>
+    <string name="error_saving_file">ファイルの保存に失敗しました</string>
+    <string name="file_name">ファイル名</string>
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="ok">OK</string>
+</resources>
