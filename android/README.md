@@ -21,41 +21,62 @@ Android端末でChArUcoボードを使った高精度カメラトラッキング
 
 ## セットアップ手順
 
-### 1. OpenCV Android SDKのダウンロード
+### クイックスタート（推奨）
 
-1. [OpenCV公式サイト](https://opencv.org/releases/)からOpenCV Android SDKをダウンロード（バージョン 4.x 推奨）
-2. ダウンロードしたファイルを解凍
-3. `opencv-4.x.x/sdk/native/libs` ディレクトリ内のファイルを確認
+OpenCVは自動的にMaven経由でダウンロードされるため、追加のセットアップは不要です：
 
-### 2. OpenCVの統合
+```bash
+cd android
+./build-release.sh
+```
 
-OpenCVをプロジェクトに統合する方法は2つあります：
+これにより、ビルド済みAPKが生成されます。
 
-#### 方法A: AARファイルを使用（推奨）
+### 詳細なセットアップ
 
-1. OpenCV SDKから `sdk/java/` ディレクトリにある `opencv-4xx.aar` ファイルを探す
-2. プロジェクトの `android/app/libs/` ディレクトリにコピー
-3. `build.gradle.kts` は既に設定済み
+#### 1. OpenCVについて
 
-#### 方法B: OpenCVをモジュールとして追加
+**自動セットアップ（推奨）**: OpenCVはMaven経由で自動的に取得されます（`build.gradle.kts`で設定済み）
 
-1. Android Studioでプロジェクトを開く
-2. `File` > `New` > `Import Module` を選択
-3. OpenCV SDKの `sdk/java` ディレクトリを選択
-4. モジュール名を `opencv` に設定
-5. `app/build.gradle.kts` に依存関係を追加:
-   ```kotlin
-   dependencies {
-       implementation(project(":opencv"))
-   }
-   ```
+**手動セットアップ（オプション）**: 公式SDKを使用したい場合：
+1. [OpenCV公式サイト](https://opencv.org/releases/)からAndroid SDKをダウンロード
+2. `opencv-4.x.x.aar` を `android/app/libs/` にコピー
+3. `build.gradle.kts`のOpenCV依存関係をコメントアウトして手動の設定に切り替え
 
-### 3. プロジェクトのビルド
+#### 2. デバッグAPKのビルド（開発・テスト用）
 
 ```bash
 cd android
 ./gradlew assembleDebug
 ```
+
+生成されるAPK: `app/build/outputs/apk/debug/app-debug.apk`
+
+#### 3. リリースAPKのビルド（配布用）
+
+詳細な手順は [BUILD_RELEASE.md](BUILD_RELEASE.md) を参照してください。
+
+**クイックガイド**:
+
+```bash
+# 1. 署名鍵を作成（初回のみ）
+keytool -genkey -v -keystore app/charuco-release-key.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias charuco-key
+
+# 2. keystore.propertiesを作成
+cat > keystore.properties << 'EOF'
+storePassword=YOUR_PASSWORD
+keyPassword=YOUR_PASSWORD
+keyAlias=charuco-key
+storeFile=app/charuco-release-key.jks
+EOF
+
+# 3. ビルド
+./build-release.sh
+```
+
+生成されるAPK: `app/build/outputs/apk/release/app-release.apk`
 
 ### 4. アプリのインストール
 

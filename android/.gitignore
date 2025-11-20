@@ -12,3 +12,8 @@ local.properties
 # OpenCV SDK (download separately)
 /app/libs/opencv*.aar
 /opencv-sdk/
+
+# Signing keys and properties
+keystore.properties
+*.jks
+*.keystore
