@@ -182,7 +182,8 @@ def run_calibration_interactive(config: Dict[str, Any]) -> Optional[str]:
         device_id=config['camera']['device_id'],
         width=config['camera']['width'],
         height=config['camera']['height'],
-        fps=config['camera']['fps']
+        fps=config['camera']['fps'],
+        is_windows=config['camera'].get('is_windows', True)
     )
 
     if not camera.start():

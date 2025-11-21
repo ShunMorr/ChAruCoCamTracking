@@ -35,10 +35,15 @@ def extract_time_series(trajectory_data, min_quality=None, min_corners=None):
             filtered_count += 1
             continue
 
-        timestamps.append(pose['timestamp'])
+        timestamps.append(float(pose['timestamp']))
         x_values.append(pose['translation']['x'])
         y_values.append(pose['translation']['y'])
         yaw_values.append(pose['rotation']['yaw'])
+
+    # Convert to relative time (start from 0)
+    if timestamps:
+        base_time = timestamps[0]
+        timestamps = [t - base_time for t in timestamps]
 
     return timestamps, x_values, y_values, yaw_values, filtered_count
 

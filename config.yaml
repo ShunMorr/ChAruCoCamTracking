@@ -15,6 +15,9 @@ charuco:
 
 # カメラ設定
 camera:
+  # Windowsかどうか (yes: MSMF, no: V4L2)
+  is_windows: yes
+
   # カメラデバイスID
   device_id: 0
 

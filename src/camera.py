@@ -15,7 +15,7 @@ class ThreadedCamera:
     """
 
     def __init__(self, device_id: int = 0, width: int = 1920,
-                 height: int = 1080, fps: int = 30):
+                 height: int = 1080, fps: int = 30, is_windows: bool = True):
         """
         Initialize threaded camera
 
@@ -29,6 +29,7 @@ class ThreadedCamera:
         self.width = width
         self.height = height
         self.fps = fps
+        self.is_windows = is_windows
 
         # Camera object
         self.cap: Optional[cv2.VideoCapture] = None
@@ -54,7 +55,8 @@ class ThreadedCamera:
             True if successful
         """
         # Open camera
-        self.cap = cv2.VideoCapture(self.device_id, cv2.CAP_V4L2)
+        backend = cv2.CAP_MSMF if self.is_windows else cv2.CAP_V4L2
+        self.cap = cv2.VideoCapture(self.device_id, backend)
 
         if not self.cap.isOpened():
             print(f"カメラ {self.device_id} を開けませんでした")

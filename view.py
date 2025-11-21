@@ -152,14 +152,16 @@ def plot_trajectory_3d(data: Dict[str, Any], arrow_interval: int = 1,
         for p in trajectory
     ])
 
-    timestamps = np.array([p['timestamp'] for p in trajectory])
+    # Convert to relative time (start from 0)
+    raw_timestamps = np.array([float(p['timestamp']) for p in trajectory])
+    timestamps = raw_timestamps - raw_timestamps[0]
 
     # Create hover text for trajectory points
     hover_texts = []
     for i, pose in enumerate(trajectory):
         text = (
             f"<b>Point {i}</b><br>"
-            f"Time: {pose['timestamp']:.3f}s<br>"
+            f"Time: {timestamps[i]:.3f}s<br>"
             f"X: {pose['translation']['x']:.2f}mm<br>"
             f"Y: {pose['translation']['y']:.2f}mm<br>"
             f"Z: {pose['translation']['z']:.2f}mm<br>"
